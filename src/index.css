@@ -1,0 +1,417 @@
+/* ==========================================================================
+   Mission: Little Astronaut - Global Styles & 2.5D Space Design System
+   Kid-friendly, High-Contrast, Accessible, Responsive CSS
+   ========================================================================== */
+
+:root {
+  /* Color Palette */
+  --space-dark: #080C1E;
+  --space-surface: #0E1630;
+  --space-card: rgba(19, 29, 61, 0.85);
+  --space-card-border: rgba(110, 142, 251, 0.25);
+  --space-overlay: rgba(8, 12, 30, 0.75);
+
+  --starlight-gold: #FFD166;
+  --starlight-gold-hover: #FDB827;
+  --cosmic-orange: #FF6B35;
+  --artemis-blue: #3A86FF;
+  --artemis-blue-hover: #266DD3;
+  --nebula-teal: #06D6A0;
+  --rocket-coral: #EF476F;
+  --galactic-purple: #7F5AF0;
+
+  --text-primary: #FFFFFF;
+  --text-secondary: #CBD5E1;
+  --text-muted: #94A3B8;
+  --text-dark: #0F172A;
+
+  /* Typography */
+  --font-heading: 'Fredoka', cursive, sans-serif;
+  --font-body: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-telemetry: 'Space Grotesk', monospace, sans-serif;
+
+  /* 3D Button Shadows for playful tactical feeling */
+  --btn-shadow-blue: 0 6px 0 #1D4ED8;
+  --btn-shadow-gold: 0 6px 0 #D97706;
+  --btn-shadow-teal: 0 6px 0 #059669;
+  --btn-shadow-coral: 0 6px 0 #BE123C;
+  --btn-shadow-purple: 0 6px 0 #5B21B6;
+
+  /* Spacing & Radii */
+  --radius-sm: 10px;
+  --radius-md: 18px;
+  --radius-lg: 26px;
+  --radius-full: 9999px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--space-dark);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+  line-height: 1.5;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, .font-heading {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.font-telemetry {
+  font-family: var(--font-telemetry);
+  letter-spacing: 0.05em;
+}
+
+/* ==========================================================================
+   2.5D Cosmic Background & Starfield Parallax
+   ========================================================================== */
+.space-background {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(circle at 50% 15%, #19254F 0%, #0B1026 60%, #050814 100%);
+  overflow: hidden;
+}
+
+.stars-twinkle {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    radial-gradient(2px 2px at 20px 30px, #ffffff, rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 100px 150px, #ffd166, rgba(0,0,0,0)),
+    radial-gradient(1.5px 1.5px at 220px 80px, #ffffff, rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 340px 290px, #4cc9f0, rgba(0,0,0,0)),
+    radial-gradient(3px 3px at 450px 190px, #ffd166, rgba(0,0,0,0)),
+    radial-gradient(1.5px 1.5px at 600px 340px, #ffffff, rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 780px 120px, #ffffff, rgba(0,0,0,0)),
+    radial-gradient(2.5px 2.5px at 920px 240px, #ffd166, rgba(0,0,0,0)),
+    radial-gradient(1.5px 1.5px at 1100px 90px, #4cc9f0, rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 1250px 320px, #ffffff, rgba(0,0,0,0));
+  background-size: 700px 450px;
+  animation: stars-drift 120s linear infinite;
+  opacity: 0.85;
+}
+
+.nebula-glow {
+  position: absolute;
+  width: 650px;
+  height: 650px;
+  border-radius: 50%;
+  filter: blur(140px);
+  opacity: 0.22;
+  pointer-events: none;
+}
+.nebula-blue {
+  top: -150px;
+  right: -100px;
+  background: #3A86FF;
+}
+.nebula-purple {
+  bottom: 50px;
+  left: -150px;
+  background: #7F5AF0;
+}
+.nebula-gold {
+  top: 40%;
+  left: 30%;
+  background: #FFD166;
+  opacity: 0.12;
+}
+
+/* 2.5D Lunar Hills Horizon at bottom */
+.lunar-horizon {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 220px;
+  pointer-events: none;
+  z-index: 1;
+  background: linear-gradient(180deg, rgba(14, 22, 48, 0) 0%, rgba(20, 27, 45, 0.75) 40%, #101524 100%);
+}
+
+.lunar-crater-layer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 120px;
+  background-image: 
+    radial-gradient(circle at 15% 100%, #1E283F 75px, transparent 76px),
+    radial-gradient(circle at 50% 120%, #172136 140px, transparent 141px),
+    radial-gradient(circle at 85% 110%, #1A243A 95px, transparent 96px);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* ==========================================================================
+   Reusable UI Components & Cards
+   ========================================================================== */
+.space-card {
+  background: var(--space-card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 2px solid var(--space-card-border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.space-card:hover {
+  border-color: rgba(110, 142, 251, 0.45);
+}
+
+.space-card-interactive {
+  cursor: pointer;
+}
+.space-card-interactive:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* Chunky 3D Push Buttons for Children */
+.btn-chunky {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-family: var(--font-heading);
+  font-size: 1.15rem;
+  font-weight: 700;
+  padding: 14px 28px;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.15s ease;
+  position: relative;
+  letter-spacing: 0.03em;
+  user-select: none;
+}
+
+.btn-chunky:active {
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 currentColor !important;
+}
+
+.btn-gold {
+  background-color: var(--starlight-gold);
+  color: var(--text-dark);
+  box-shadow: var(--btn-shadow-gold);
+}
+.btn-gold:hover {
+  background-color: var(--starlight-gold-hover);
+}
+
+.btn-blue {
+  background-color: var(--artemis-blue);
+  color: #FFFFFF;
+  box-shadow: var(--btn-shadow-blue);
+}
+.btn-blue:hover {
+  background-color: var(--artemis-blue-hover);
+}
+
+.btn-teal {
+  background-color: var(--nebula-teal);
+  color: var(--text-dark);
+  box-shadow: var(--btn-shadow-teal);
+}
+.btn-teal:hover {
+  background-color: #05C290;
+}
+
+.btn-coral {
+  background-color: var(--rocket-coral);
+  color: #FFFFFF;
+  box-shadow: var(--btn-shadow-coral);
+}
+.btn-coral:hover {
+  background-color: #E2375F;
+}
+
+.btn-purple {
+  background-color: var(--galactic-purple);
+  color: #FFFFFF;
+  box-shadow: var(--btn-shadow-purple);
+}
+
+.btn-ghost {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.3);
+}
+.btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.btn-sm {
+  font-size: 0.95rem;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+}
+.btn-lg {
+  font-size: 1.35rem;
+  padding: 18px 36px;
+  border-radius: var(--radius-lg);
+}
+
+/* Badge Pills */
+.badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  font-family: var(--font-heading);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Progress and Telemetry Bars */
+.progress-track {
+  width: 100%;
+  height: 16px;
+  background: rgba(15, 23, 42, 0.6);
+  border-radius: var(--radius-full);
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.progress-fill::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.25) 50%, transparent 100%);
+  animation: shine-sweep 2.5s infinite;
+}
+
+/* ==========================================================================
+   Animations
+   ========================================================================== */
+@keyframes stars-drift {
+  from { transform: translateY(0); }
+  to { transform: translateY(-450px); }
+}
+
+@keyframes float-astronaut {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-16px) rotate(2deg);
+  }
+}
+
+@keyframes pulse-gentle {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.9; }
+}
+
+@keyframes radar-sweep {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes shine-sweep {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.animate-float {
+  animation: float-astronaut 5s ease-in-out infinite;
+}
+
+.animate-pulse-slow {
+  animation: pulse-gentle 3s ease-in-out infinite;
+}
+
+/* ==========================================================================
+   Top Navigation HUD
+   ========================================================================== */
+.top-nav-hud {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(8, 12, 30, 0.85);
+  backdrop-filter: blur(14px);
+  border-bottom: 2px solid rgba(110, 142, 251, 0.2);
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Container Wrapper */
+.game-container {
+  position: relative;
+  z-index: 2;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 20px 80px;
+  min-height: calc(100vh - 80px);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Responsive Grid helpers */
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+.grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 900px) {
+  .grid-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .grid-2, .grid-3, .grid-4 {
+    grid-template-columns: 1fr;
+  }
+  .top-nav-hud {
+    padding: 10px 14px;
+  }
+  .btn-chunky {
+    font-size: 1rem;
+    padding: 12px 20px;
+  }
+}

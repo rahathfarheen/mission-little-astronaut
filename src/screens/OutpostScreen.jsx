@@ -4,15 +4,29 @@ import { Button } from '../components/common/Button';
 import { Card } from '../components/common/Card';
 import { Modal } from '../components/common/Modal';
 import { TelemetryGauge } from '../components/outpost/TelemetryGauge';
+import { LunarBase3D } from '../components/outpost/LunarBase3D';
 import { ModuleCard } from '../components/outpost/ModuleCard';
 import { OUTPOST_MODULES } from '../data/outpostData';
+import { RESOURCE_ACTIONS, EDUCATIONAL_DISCLAIMER } from '../data/resourceData.js';
 import { soundFx } from '../utils/audio';
 
 export const OutpostScreen = () => {
-  const { resources, boostResource, navigateTo, cadetProfile } = useGame();
+  const {
+    resources,
+    boostResource,
+    survivalStatus,
+    applyEngineAction,
+    advanceEngineTick,
+    lastActionFeedback,
+    setLastActionFeedback,
+    ageGroup,
+    navigateTo,
+    cadetProfile
+  } = useGame();
+
   const [selectedModule, setSelectedModule] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const [actionFeedback, setActionFeedback] = useState(null);
+  const [activeTab, setActiveTab] = useState('3d-base'); // '3d-base' | 'actions' | 'modules'
 
   const handleInspect = (mod) => {
     setSelectedModule(mod);
@@ -22,24 +36,29 @@ export const OutpostScreen = () => {
   const handleModuleAction = (mod) => {
     switch (mod.id) {
       case 'greenhouse':
-        boostResource('oxygen', 6);
-        setActionFeedback('🌱 Space lettuce watered! Oxygen production boosted +6%');
+        applyEngineAction('hydroponic-photosynthesis');
         break;
       case 'solar':
-        boostResource('energy', 8);
-        setActionFeedback('⚡ Solar arrays brushed clean of regolith! Solar power boosted +8%');
+        applyEngineAction('clean-solar-panels');
         break;
       case 'water-recycler':
-        boostResource('water', 7);
-        setActionFeedback('💧 Cryogenic ice filter cycled! Water reserves boosted +7%');
+        applyEngineAction('harvest-polar-ice');
         break;
       case 'rover-garage':
         soundFx.play('success');
-        setActionFeedback('🚜 Hop-1 Rover diagnostic complete: 100% operational for surface mission!');
+        setLastActionFeedback({
+          actionName: 'Hop-1 Rover Diagnostic',
+          explanation: '🚜 Rover suspension, battery, and scoop are calibrated and ready for crater exploration!',
+          scienceFact: 'NASA\'s Apollo Lunar Roving Vehicle had mesh tires made of zinc-coated piano wire because rubber would pop in the harsh lunar vacuum!'
+        });
         break;
       case 'comm-tower':
         soundFx.play('success');
-        setActionFeedback('📡 Houston link synchronized! Science packets uploaded with 1.28s latency.');
+        setLastActionFeedback({
+          actionName: 'Houston Laser Telemetry Sync',
+          explanation: '📡 Deep space optical laser communication synchronized with NASA ground station at 1.28-second lunar latency!',
+          scienceFact: 'NASA tested laser communication on the LADEE spacecraft, transmitting data from the Moon at 622 Megabits per second!'
+        });
         break;
       case 'science-lab':
         navigateTo(SCREENS.SCIENCE);
@@ -47,10 +66,18 @@ export const OutpostScreen = () => {
       default:
         break;
     }
+  };
 
-    setTimeout(() => {
-      setActionFeedback(null);
-    }, 3500);
+  const handleEngineActionClick = (actionId) => {
+    applyEngineAction(actionId);
+  };
+
+  const handleAdvanceTick = () => {
+    soundFx.play('click');
+    const tick = advanceEngineTick();
+    if (tick.event) {
+      soundFx.play('badge');
+    }
   };
 
   return (
@@ -59,13 +86,13 @@ export const OutpostScreen = () => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
         <div>
           <div className="badge-pill" style={{ background: 'rgba(6, 214, 160, 0.15)', color: 'var(--nebula-teal)', marginBottom: '4px' }}>
-            ● Base Operations Active
+            ● Base Operations Active • Lunar South Pole
           </div>
           <h2 style={{ fontSize: 'clamp(1.6rem, 3.5vw, 2.2rem)', color: '#FFF' }}>
-            Lunar Base Alpha — South Pole Command Hub
+            Lunar Base Alpha — Life Support Operations
           </h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-            Commander on deck: <strong>{cadetProfile.name}</strong> • Shackleton Crater Rim
+            Commander on deck: <strong>{cadetProfile.name}</strong> • Age Group: <strong>{ageGroup}</strong>
           </p>
         </div>
 
@@ -89,115 +116,162 @@ export const OutpostScreen = () => {
         </div>
       </div>
 
-      {/* Action Notification Alert Toast */}
-      {actionFeedback && (
-        <div
-          style={{
-            background: 'rgba(6, 214, 160, 0.2)',
-            border: '2px solid #06D6A0',
-            color: '#FFF',
-            padding: '12px 20px',
-            borderRadius: '14px',
-            marginBottom: '16px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px',
-            fontWeight: 700,
-            fontSize: '0.95rem',
-            animation: 'pulse-gentle 0.3s ease'
-          }}
+      {/* Real-time 4-System Telemetry HUD Widget */}
+      <TelemetryGauge resources={resources} survivalStatus={survivalStatus} />
+
+      {/* Interactive 3D Lunar Outpost Viewport */}
+      <div style={{ marginBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ fontSize: '1.2rem' }}>🪐</span>
+          <h3 style={{ fontSize: '1.2rem', color: 'var(--starlight-gold)', margin: 0 }}>
+            Interactive 3D Lunar Outpost Simulation
+          </h3>
+        </div>
+        
+        {/* Simulation Advance Tick Button */}
+        <Button
+          variant="ghost"
+          size="sm"
+          icon="⏳"
+          onClick={handleAdvanceTick}
+          title="Advances simulation by one cycle: burns life support and checks solar events"
         >
-          <span>🚀</span>
-          <span>{actionFeedback}</span>
-        </div>
-      )}
-
-      {/* Real-time Telemetry HUD Widget */}
-      <TelemetryGauge resources={resources} />
-
-      {/* 2.5D Outpost Base Habitat Illustration Banner */}
-      <div
-        style={{
-          position: 'relative',
-          height: '180px',
-          borderRadius: '20px',
-          background: 'linear-gradient(180deg, #131E3D 0%, #0A0E1D 100%)',
-          border: '2px solid rgba(110, 142, 251, 0.25)',
-          overflow: 'hidden',
-          marginBottom: '24px',
-          display: 'flex',
-          alignItems: 'flex-end',
-          padding: '0 24px 16px'
-        }}
-      >
-        {/* Distant Earth hanging in the black sky */}
-        <div
-          style={{
-            position: 'absolute',
-            top: '20px',
-            right: '40px',
-            width: '42px',
-            height: '42px',
-            borderRadius: '50%',
-            background: 'radial-gradient(circle at 35% 35%, #4CC9F0 0%, #3A86FF 60%, #03045E 100%)',
-            boxShadow: '0 0 20px rgba(58, 134, 255, 0.6)'
-          }}
-          title="Earth as seen from the Moon's South Pole"
-        />
-
-        {/* Base Dome Vector Silhouette */}
-        <div style={{ display: 'flex', alignItems: 'flex-end', gap: '20px', zIndex: 2 }}>
-          {/* Main Geodesic Dome */}
-          <div
-            style={{
-              width: '120px',
-              height: '65px',
-              borderTopLeftRadius: '70px',
-              borderTopRightRadius: '70px',
-              background: 'linear-gradient(180deg, rgba(255,255,255,0.4) 0%, rgba(58, 134, 255, 0.3) 100%)',
-              border: '2px solid rgba(255, 255, 255, 0.5)',
-              position: 'relative',
-              boxShadow: '0 0 25px rgba(58, 134, 255, 0.4)'
-            }}
-          >
-            <div style={{ position: 'absolute', bottom: '8px', left: '50%', transform: 'translateX(-50%)', width: '20px', height: '14px', borderRadius: '4px', background: '#FFD166', opacity: 0.8 }} />
-          </div>
-
-          {/* Hydroponics Greenhouse Dome */}
-          <div
-            style={{
-              width: '90px',
-              height: '50px',
-              borderTopLeftRadius: '50px',
-              borderTopRightRadius: '50px',
-              background: 'rgba(6, 214, 160, 0.3)',
-              border: '2px solid #06D6A0',
-              boxShadow: '0 0 20px rgba(6, 214, 160, 0.4)'
-            }}
-          />
-
-          {/* Solar Panel Wing */}
-          <div
-            style={{
-              width: '80px',
-              height: '18px',
-              background: '#1D4ED8',
-              border: '2px solid #93C5FD',
-              borderRadius: '4px',
-              transform: 'rotate(-20deg)',
-              transformOrigin: 'bottom left'
-            }}
-          />
-        </div>
-
-        <div style={{ position: 'absolute', bottom: '16px', right: '24px', fontSize: '0.8rem', color: 'var(--text-muted)', zIndex: 2 }}>
-          Coordinates: 89.9° S, 0.0° E • Shackleton Basin
-        </div>
+          Advance Lunar Sol / Cycle
+        </Button>
       </div>
 
-      {/* Grid of 6 Interactive Outpost Modules */}
+      {/* 3D Visualizer Component */}
+      <LunarBase3D resources={resources} />
+
+      {/* Action Notification Alert / Educational Explanation Toast */}
+      {lastActionFeedback && (
+        <Card
+          style={{
+            background: 'linear-gradient(135deg, rgba(6, 214, 160, 0.15) 0%, rgba(58, 134, 255, 0.15) 100%)',
+            border: '2px solid #06D6A0',
+            padding: '16px 20px',
+            marginBottom: '24px',
+            borderRadius: '16px'
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+            <div style={{ flex: 1 }}>
+              {lastActionFeedback.error ? (
+                <div style={{ color: '#EF476F', fontWeight: 700, fontSize: '1rem', marginBottom: '4px' }}>
+                  ⚠️ {lastActionFeedback.error}
+                  {lastActionFeedback.tip && <div style={{ fontSize: '0.85rem', color: '#FFF', marginTop: '4px' }}>Tip: {lastActionFeedback.tip}</div>}
+                </div>
+              ) : (
+                <>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                    <span style={{ color: 'var(--starlight-gold)', fontWeight: 700, fontSize: '1rem' }}>
+                      ✨ {lastActionFeedback.actionName} Executed!
+                    </span>
+                    {lastActionFeedback.deltas && (
+                      <div style={{ display: 'flex', gap: '8px', fontSize: '0.8rem' }}>
+                        {Object.entries(lastActionFeedback.deltas).map(([k, v]) => (
+                          <span
+                            key={k}
+                            style={{
+                              background: v > 0 ? 'rgba(6, 214, 160, 0.3)' : 'rgba(239, 71, 111, 0.3)',
+                              color: v > 0 ? '#06D6A0' : '#EF476F',
+                              padding: '2px 6px',
+                              borderRadius: '6px',
+                              fontWeight: 700
+                            }}
+                          >
+                            {k}: {v > 0 ? `+${v}` : v}%
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <p style={{ color: '#FFF', fontSize: '0.92rem', marginBottom: '8px' }}>
+                    {lastActionFeedback.explanation}
+                  </p>
+                  {lastActionFeedback.scienceFact && (
+                    <div style={{ fontSize: '0.82rem', color: '#B8C0E0', background: 'rgba(0,0,0,0.25)', padding: '8px 12px', borderRadius: '8px', borderLeft: '3px solid #FFD166' }}>
+                      🚀 <strong>NASA Science Fact:</strong> {lastActionFeedback.scienceFact}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+            <button
+              onClick={() => setLastActionFeedback(null)}
+              style={{ background: 'transparent', border: 'none', color: '#FFF', cursor: 'pointer', fontSize: '1.1rem' }}
+            >
+              ✕
+            </button>
+          </div>
+        </Card>
+      )}
+
+      {/* 4-System Life Support Action Bay */}
       <h3 style={{ fontSize: '1.25rem', color: 'var(--starlight-gold)', marginBottom: '14px' }}>
-        Modular Subsystems & Maintenance Bays
+        Life Support Resource Action Controls (4 Systems)
+      </h3>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '14px', marginBottom: '32px' }}>
+        {RESOURCE_ACTIONS.map(action => {
+          const costEntries = Object.entries(action.cost || {});
+          const benefitEntries = Object.entries(action.benefit || {});
+
+          return (
+            <Card
+              key={action.id}
+              style={{
+                padding: '16px',
+                background: 'rgba(19, 29, 61, 0.75)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '1.4rem' }}>{action.icon}</span>
+                    <strong style={{ color: '#FFF', fontSize: '0.95rem' }}>{action.name}</strong>
+                  </div>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: '4px' }}>
+                    {action.system.toUpperCase()}
+                  </span>
+                </div>
+
+                {/* Resource Impact Preview */}
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '12px', fontSize: '0.78rem' }}>
+                  {benefitEntries.map(([k, v]) => (
+                    <span key={k} style={{ color: '#06D6A0', background: 'rgba(6, 214, 160, 0.15)', padding: '2px 6px', borderRadius: '4px', fontWeight: 700 }}>
+                      +{v}% {k}
+                    </span>
+                  ))}
+                  {costEntries.map(([k, v]) => (
+                    <span key={k} style={{ color: '#EF476F', background: 'rgba(239, 71, 111, 0.15)', padding: '2px 6px', borderRadius: '4px' }}>
+                      -{v}% {k}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <Button
+                variant="teal"
+                size="sm"
+                sound="powerup"
+                onClick={() => handleEngineActionClick(action.id)}
+              >
+                Execute Action
+              </Button>
+            </Card>
+          );
+        })}
+      </div>
+
+      {/* Grid of 6 Interactive Outpost Module Diagnostic Bays */}
+      <h3 style={{ fontSize: '1.25rem', color: 'var(--starlight-gold)', marginBottom: '14px' }}>
+        Outpost Subsystem Maintenance Bays
       </h3>
 
       <div className="grid-3" style={{ marginBottom: '32px' }}>
@@ -209,6 +283,22 @@ export const OutpostScreen = () => {
             onInspect={handleInspect}
           />
         ))}
+      </div>
+
+      {/* Educational Notice Banner */}
+      <div
+        style={{
+          padding: '12px 18px',
+          borderRadius: '12px',
+          background: 'rgba(255, 255, 255, 0.04)',
+          border: '1px dashed rgba(255, 255, 255, 0.15)',
+          color: 'var(--text-muted)',
+          fontSize: '0.8rem',
+          textAlign: 'center',
+          marginBottom: '20px'
+        }}
+      >
+        ℹ️ {EDUCATIONAL_DISCLAIMER}
       </div>
 
       {/* Module Inspection Dialog Modal */}

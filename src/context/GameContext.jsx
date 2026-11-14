@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, useMemo } from 'react';
 import { SUIT_COLORS, VISOR_COLORS, CADET_PATCHES } from '../data/badgesData';
 import { INITIAL_HUD_RESOURCES } from '../data/outpostData';
+import { ResourceEngine } from '../services/resourceEngine.js';
 import { soundFx } from '../utils/audio';
 
 const GameContext = createContext(null);
@@ -48,8 +49,26 @@ export const GameProvider = ({ children }) => {
   // Mission selection
   const [activeMissionId, setActiveMissionId] = useState('ice-extractor');
 
-  // Outpost resource levels
-  const [resources, setResources] = useState(INITIAL_HUD_RESOURCES);
+  // Modular Resource Engine instance (pure JS logic decoupled from React rendering)
+  const engineRef = useRef(null);
+  if (!engineRef.current) {
+    engineRef.current = new ResourceEngine({
+      oxygen: INITIAL_HUD_RESOURCES.oxygen || 92,
+      water: INITIAL_HUD_RESOURCES.water || 78,
+      energy: INITIAL_HUD_RESOURCES.energy || 85,
+      radiationShield: INITIAL_HUD_RESOURCES.hullIntegrity || 95
+    });
+  }
+
+  // Outpost resource levels synced with the engine
+  const [resources, setResources] = useState(() => ({
+    ...INITIAL_HUD_RESOURCES,
+    radiationShield: INITIAL_HUD_RESOURCES.hullIntegrity || 95,
+    ...engineRef.current.getResources()
+  }));
+
+  const [survivalStatus, setSurvivalStatus] = useState(() => engineRef.current.checkSurvivalStatus());
+  const [lastActionFeedback, setLastActionFeedback] = useState(null);
 
   // Unlocked badges
   const [unlockedBadges, setUnlockedBadges] = useState(['first-step']);
@@ -105,22 +124,69 @@ export const GameProvider = ({ children }) => {
 
   const boostResource = (key, amount = 5) => {
     soundFx.play('powerup');
-    setResources(prev => {
-      const current = prev[key] || 50;
-      const updated = Math.min(100, Math.max(10, current + amount));
-      return { ...prev, [key]: updated };
-    });
+    const engineKey = key === 'hullIntegrity' ? 'radiationShield' : key;
+    if (engineRef.current.configs[engineKey]) {
+      engineRef.current.recoverResource(engineKey, amount, 'Cadet boost');
+    }
+    const updated = engineRef.current.getResources();
+    setResources(prev => ({
+      ...prev,
+      ...updated,
+      hullIntegrity: updated.radiationShield
+    }));
+    setSurvivalStatus(engineRef.current.checkSurvivalStatus());
+  };
+
+  const applyEngineAction = (actionId) => {
+    const result = engineRef.current.applyAction(actionId, ageGroup);
+    if (result.success) {
+      soundFx.play('powerup');
+      setResources(prev => ({
+        ...prev,
+        ...result.currentLevels,
+        hullIntegrity: result.currentLevels.radiationShield
+      }));
+      setSurvivalStatus(result.survivalStatus);
+      setLastActionFeedback({
+        actionName: result.actionName,
+        explanation: result.explanation,
+        scienceFact: result.scienceFact,
+        deltas: result.deltas
+      });
+    } else {
+      soundFx.play('click');
+      setLastActionFeedback({
+        error: result.error,
+        tip: result.tip
+      });
+    }
+    return result;
+  };
+
+  const advanceEngineTick = () => {
+    const tickResult = engineRef.current.tick({ triggerRandomEvent: true });
+    setResources(prev => ({
+      ...prev,
+      ...tickResult.currentLevels,
+      hullIntegrity: tickResult.currentLevels.radiationShield
+    }));
+    setSurvivalStatus(tickResult.survivalStatus);
+    return tickResult;
   };
 
   const completeMission = (results) => {
     setLastMissionSummary(results);
-    // boost resources automatically
+    // boost resources automatically in engine
+    engineRef.current.recoverResource('water', 15, 'Mission Harvest');
+    engineRef.current.recoverResource('oxygen', 10, 'Mission Harvest');
+    engineRef.current.recoverResource('energy', 10, 'Mission Harvest');
+    const updated = engineRef.current.getResources();
     setResources(prev => ({
       ...prev,
-      water: Math.min(100, prev.water + 15),
-      oxygen: Math.min(100, prev.oxygen + 10),
-      energy: Math.min(100, prev.energy + 10)
+      ...updated,
+      hullIntegrity: updated.radiationShield
     }));
+    setSurvivalStatus(engineRef.current.checkSurvivalStatus());
     unlockBadge('ice-hunter');
     unlockBadge('commander');
     navigateTo(SCREENS.RESULTS);
@@ -128,7 +194,14 @@ export const GameProvider = ({ children }) => {
 
   const resetGame = () => {
     soundFx.play('click');
-    setResources(INITIAL_HUD_RESOURCES);
+    engineRef.current.reset();
+    const updated = engineRef.current.getResources();
+    setResources({
+      ...INITIAL_HUD_RESOURCES,
+      ...updated,
+      hullIntegrity: updated.radiationShield
+    });
+    setSurvivalStatus(engineRef.current.checkSurvivalStatus());
     setUnlockedBadges(['first-step']);
     setCurrentScreen(SCREENS.WELCOME);
   };
@@ -155,6 +228,12 @@ export const GameProvider = ({ children }) => {
         lastMissionSummary,
         completeMission,
         resetGame,
+        resourceEngine: engineRef.current,
+        applyEngineAction,
+        advanceEngineTick,
+        survivalStatus,
+        lastActionFeedback,
+        setLastActionFeedback,
         muted,
         toggleSound
       }}
